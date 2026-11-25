@@ -143,6 +143,11 @@ const EV=[['مولد النبي ﷺ في عام الفيل','خ'],['نزول ا�
 const SHUF=[8,2,6,0,10,4,7,1,9,3,5];
 const SEAL=['#EA5529','#66B598','#4A5AA8'];
 let placed=[],solved=false;
+const LOG='https://script.google.com/macros/s/AKfycbzyASX-VgJgORsxA34nzAZmXp0glYC--Zx7YSDGDBzxpqS7c_fUv1MB-91iwZ5Swvq4/exec';
+let CID='';try{CID=localStorage.getItem('rw_cid')||'';if(!CID){CID=Math.random().toString(36).slice(2,10);localStorage.setItem('rw_cid',CID)}}catch(e){CID='s'+Math.random().toString(36).slice(2,9)}
+function track(o){try{o.cid=CID;fetch(LOG,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o),keepalive:true}).catch(()=>{})}catch(e){}}
+const SEEN=new Set(),LOGGED=new Set();
+const PLABEL={today:'رحلةٌ في السيرة',anbiya:'أسماء الأنبياء (إعادة)'};
 
 const pick=document.getElementById('pick'),panel=document.getElementById('panel'),foot=document.getElementById('foot');
 
@@ -252,7 +257,7 @@ function tapCell(r,c){
   path.push([r,c]);
   const ps=path.map(p=>p.join(',')).join('|');
   const w=Object.keys(PL).find(k=>PL[k].map(p=>p.join(',')).join('|')===ps);
-  if(w){path=[];if(found.has(w))wsMsg=['hint','وجدت «'+w+'» من قبل.'];else{found.add(w);wsMsg=['hint','أحسنت! وجدت نبي الله '+w+' عليه السلام.']}}
+  if(w){path=[];if(found.has(w))wsMsg=['hint','وجدت «'+w+'» من قبل.'];else{found.add(w);wsMsg=['hint','أحسنت! وجدت نبي الله '+w+' عليه السلام.'];if(found.size===7&&!LOGGED.has('anbiya')){LOGGED.add('anbiya');track({t:'solve',p:PLABEL.anbiya})}}}
   else if(path.length>=4&&!Object.values(PL).some(cs=>cs.length>path.length&&cs.slice(0,path.length).map(p=>p.join(',')).join('|')===ps)){
     wsMsg=['warn','«'+path.map(p=>G[p[0]][p[1]]).join('')+'» ليس من الأسماء المطلوبة… ربما فخ! حاول مرة ثانية.'];path=[]}
   anbiya();
@@ -327,7 +332,7 @@ async function shareFlow(btn){
     btn.disabled=true;btn.textContent='جاري التجهيز…';
     const cv=await makeCard(box.dataset.key,name);
     const img=box.querySelector('.sh-img');img.src=cv.toDataURL('image/png');
-    box._name=name;box._blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    box._name=name;track({t:'name',p:PLABEL[box.dataset.key],n:name});box._blob=await new Promise(r=>cv.toBlob(r,'image/png'));
     box.querySelector('.sh-out').hidden=false;btn.disabled=false;btn.textContent='جهّز من جديد';
     try{const f=new File([box._blob],'ruwwad.png',{type:'image/png'});box.querySelector('.sh-share').hidden=!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){}
     img.scrollIntoView({behavior:'smooth',block:'center'});return}
@@ -345,6 +350,7 @@ function soon(p){
 function show(id){
   const p=PUZ.find(x=>x.id===id)||PUZ.find(x=>x.kind==='today');
   renderPick(p.id);
+  if(!SEEN.has(p.id)){SEEN.add(p.id);track({t:'visit',p:p.title,dev:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'جوال':'كمبيوتر'})}
   if(p.kind==='today')today();else if(p.kind==='done')anbiya();else soon(p);
   foot.textContent=p.kind==='today'?'أسرع في الحل، غيرك قارب على الانتهاء!':'كونوا قريبين من القناة… سيكون هناك تحديات مميزة أخرى قريــباً';
   try{if(location.hash.slice(1)!==p.id)history.replaceState(null,'','#'+p.id)}catch(e){}
@@ -362,7 +368,7 @@ panel.addEventListener('click',e=>{
   if(e.target.closest('#ws-reset')){found=new Set();path=[];wsMsg=null;anbiya();return}
   if(e.target.closest('#ws-clear')){path=[];wsMsg=null;anbiya();return}
   const o=e.target.closest('.opt');
-  if(o){const right=o.dataset.o==='الأحزاب';o.classList.add(right?'ok':'bad');if(right){document.querySelectorAll('.opt').forEach(x=>x.disabled=true);document.getElementById('ayah').classList.add('show');document.getElementById('shareT').hidden=false}}
+  if(o){const right=o.dataset.o==='الأحزاب';o.classList.add(right?'ok':'bad');if(right){document.querySelectorAll('.opt').forEach(x=>x.disabled=true);document.getElementById('ayah').classList.add('show');document.getElementById('shareT').hidden=false;if(!LOGGED.has('today')){LOGGED.add('today');track({t:'solve',p:PLABEL.today})}}}
 });
 panel.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('sh-name')){const b=e.target.closest('.sharebox').querySelector('.sh-make');if(b)shareFlow(b)}});
 window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
