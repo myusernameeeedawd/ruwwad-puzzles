@@ -254,7 +254,7 @@ function tapCell(r,c){
 
 /* ---------- share image ---------- */
 const CARDS={
-  today:{title:'رحلةٌ في السيرة',lines:['خاتم النبيين'],sub:'﴿وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ﴾ [الأحزاب: ٤٠]'},
+  today:{title:'رحلةٌ في السيرة',beads:'خاتمالنبيين',lines:['خاتم النبيين'],sub:'﴿وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ﴾ [الأحزاب: ٤٠]'},
   anbiya:{title:'أسماء الأنبياء',lines:['يونس • موسى • صالح • يوسف','داود • شعيب • عيسى'],sub:'عليهم الصلاة والسلام'}
 };
 function shareBox(key){
@@ -285,20 +285,31 @@ async function makeCard(key,name){
   ctx.fillStyle='rgba(255,255,255,.9)';ctx.font=`500 36px ${P}`;ctx.fillText('البطل',W/2,345);
   ctx.fillStyle='#FFCF63';fit(ctx,name,920,104,700,P);ctx.fillText(name,W/2,450);
   ctx.fillStyle='#fff';const t='حلّ لغز «'+d.title+'» بنجاح!';fit(ctx,t,920,46,700,P);ctx.fillText(t,W/2,535);
-  ctx.fillStyle='#EA5529';rrect(ctx,90,610,900,330,40);ctx.fill();
-  ctx.fillStyle='#fff';rrect(ctx,90,596,900,330,40);ctx.fill();
-  ctx.fillStyle='#EA5529';ctx.font=`700 32px ${P}`;ctx.fillText('الحل الصحيح',W/2,660);
+  let o=0;
+  if(d.beads){
+    const n=d.beads.length,bs=64,gap=14,tw=n*bs+(n-1)*gap,x0=W/2+tw/2,y0=590;
+    ctx.fillStyle='rgba(20,28,80,.35)';rrect(ctx,W/2-tw/2-26,y0-18,tw+52,bs+64,32);ctx.fill();
+    ctx.strokeStyle='rgba(255,207,99,.6)';ctx.lineWidth=5;ctx.setLineDash([2,12]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x0-bs/2,y0+bs/2);ctx.lineTo(x0-tw+bs/2,y0+bs/2);ctx.stroke();ctx.setLineDash([]);
+    [...d.beads].forEach((ch,i)=>{const cx=x0-bs/2-i*(bs+gap),cy=y0+bs/2;
+      ctx.fillStyle='#FFCF63';ctx.beginPath();ctx.arc(cx,cy,bs/2,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#1F2A66';ctx.font=`700 34px ${P}`;ctx.fillText(ch,cx,cy+12);
+      ctx.fillStyle='rgba(255,255,255,.8)';ctx.font=`600 20px ${P}`;ctx.fillText(AR(i+1),cx,y0+bs+30)});
+    o=135;
+  }
+  ctx.fillStyle='#EA5529';rrect(ctx,90,610+o,900,330,40);ctx.fill();
+  ctx.fillStyle='#fff';rrect(ctx,90,596+o,900,330,40);ctx.fill();
+  ctx.fillStyle='#EA5529';ctx.font=`700 32px ${P}`;ctx.fillText('الحل الصحيح',W/2,660+o);
   ctx.fillStyle='#4A5AA8';
-  if(d.lines.length===1){fit(ctx,d.lines[0],820,96,700,P);ctx.fillText(d.lines[0],W/2,790)}
-  else{d.lines.forEach((l,i)=>{fit(ctx,l,820,54,700,P);ctx.fillText(l,W/2,745+i*72)})}
-  ctx.fillStyle='#1F2A66';fit(ctx,d.sub,820,32,500,P);ctx.fillText(d.sub,W/2,885);
+  if(d.lines.length===1){fit(ctx,d.lines[0],820,96,700,P);ctx.fillText(d.lines[0],W/2,790+o)}
+  else{d.lines.forEach((l,i)=>{fit(ctx,l,820,54,700,P);ctx.fillText(l,W/2,745+o+i*72)})}
+  ctx.fillStyle='#1F2A66';fit(ctx,d.sub,820,32,500,P);ctx.fillText(d.sub,W/2,885+o);
   let hij='',gre='';const now=new Date();
   try{hij=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(now)}catch(e){}
   try{gre=new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(now)+'م'}catch(e){}
-  ctx.fillStyle='#fff';ctx.font=`600 32px ${P}`;if(hij)ctx.fillText(hij,W/2,1015);
-  ctx.fillStyle='rgba(255,255,255,.75)';ctx.font=`500 28px ${P}`;if(gre)ctx.fillText(gre,W/2,1060);
+  ctx.fillStyle='#fff';ctx.font=`600 32px ${P}`;if(hij)ctx.fillText(hij,W/2,1015+o*0.74);
+  ctx.fillStyle='rgba(255,255,255,.75)';ctx.font=`500 28px ${P}`;if(gre)ctx.fillText(gre,W/2,1058+o*0.74);
   const lg=document.querySelector('header img');
-  if(lg&&lg.naturalWidth){const lw=190,lh=lw*lg.naturalHeight/lg.naturalWidth;ctx.drawImage(lg,W/2-lw/2,H-lh-50,lw,lh)}
+  if(lg&&lg.naturalWidth){const lw=o?140:190,lh=lw*lg.naturalHeight/lg.naturalWidth;ctx.drawImage(lg,W/2-lw/2,H-lh-(o?28:50),lw,lh)}
   return cv;
 }
 async function shareFlow(btn){
