@@ -135,7 +135,7 @@ footer img{width:34px;height:auto;opacity:.9}
   <form class="gate-card" id="gateForm" novalidate>
     <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 0C53 40 60 47 100 50C60 53 53 60 50 100C47 60 40 53 0 50C40 47 47 40 50 0Z" fill="#FFCF63"/></svg>
     <h2 id="gateT">أهلاً بك يا بطل!</h2>
-    <p>قبل ما تبدأ، اكتب اسمك الثنائي (اسمك واسم أبيك)</p>
+    <p>قبل ما تبدأ، اكتب اسمك الثنائي (اسمك واسم أبيك أو كنيتك)</p>
     <input id="gateName" maxlength="40" autocomplete="name" placeholder="مثال: عبد الرحمن أحمد" aria-label="الاسم الثنائي">
     <p class="gate-err" id="gateErr" aria-live="polite"></p>
     <button class="btn main" type="submit" style="width:100%;min-height:52px;font-size:19px">ابدأ</button>
@@ -397,7 +397,7 @@ document.getElementById('gateForm').addEventListener('submit',e=>{
   e.preventDefault();
   const v=gName.value.replace(/\s+/g,' ').trim();
   const parts=v.split(' ').filter(x=>x.length>=2);
-  if(parts.length<2){gErr.textContent='اكتب اسمك الثنائي: اسمك واسم أبيك';gName.focus();return}
+  if(parts.length<2){gErr.textContent='اكتب اسمك الثنائي: اسمك واسم أبيك أو كنيتك';gName.focus();return}
   const changed=v!==NAME;NAME=v;try{localStorage.setItem('rw_name',v)}catch(err){}
   gate.hidden=true;setWho();if(changed)SEEN.clear();if(CUR)logVisit(CUR);
 });
