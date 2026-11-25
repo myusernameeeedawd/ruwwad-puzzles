@@ -2,9 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<!-- This site is hosted on Netlify. Anyone can build and deploy a site
-     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=a4abded1-ea16-4497-b3be-851fcdf7d071
-     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ألغاز الرواد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,6 +93,20 @@ header img{width:clamp(78px,16vw,112px);height:auto}
 footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;color:var(--y);font-weight:600;font-size:15px}
 footer img{width:34px;height:auto;opacity:.9}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.seg button{min-height:44px;padding:0 18px;border-radius:999px;background:rgba(255,255,255,.14);font-weight:700}
+.seg button[aria-pressed=true]{background:var(--y);color:var(--navy)}
+.grid6 button{aspect-ratio:1;border-radius:12px;display:grid;place-items:center;font-size:clamp(20px,5vw,30px);font-weight:700;background:#E6E8F3;color:var(--navy);transition:transform .1s}
+.grid6 button:active{transform:scale(.94)}
+.grid6 button.sel{outline:4px solid var(--o);outline-offset:-4px;background:#FFE1D8}
+.count{margin:12px 0 0;font-weight:700;color:var(--y)}
+.sharebox{margin-top:18px;padding:16px;border-radius:20px;background:rgba(255,255,255,.1);text-align:center}
+.sharebox input{display:block;width:100%;max-width:360px;min-height:50px;margin:10px auto;border-radius:14px;border:0;padding:0 14px;font:inherit;font-size:18px;text-align:center;color:var(--navy)}
+.sharebox input:focus-visible{outline:3px solid var(--y)}
+.sharebox img{display:block;width:100%;max-width:360px;border-radius:16px;margin:12px auto 0}
+.sharebox .tools{justify-content:center}
+.sh-note{margin:10px 0 0;font-size:15px;opacity:.9}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -123,7 +134,7 @@ footer img{width:34px;height:auto;opacity:.9}
 const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
 const LOCK='<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="#fff" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#fff" stroke-width="2"/></svg>';
 const PUZ=[
-  {id:'anbiya',kind:'done',tag:'تم ✓',title:'أسماء الأنبياء',sub:'انتهى… اضغط لترى الحل'},
+  {id:'anbiya',kind:'done',tag:'تم ✓',title:'أسماء الأنبياء',sub:'انتهى… اعرض الحل أو أعد الحل'},
   {id:'today',kind:'today',tag:'لغز اليوم',title:'رحلةٌ في السيرة',sub:'رتّب الأحداث واكتشف الوصف'},
   {id:'soon1',kind:'soon',tag:'قريباً',title:'لغز الرموز السرّية',sub:'تلميح: لكل رمز حرف'},
   {id:'soon2',kind:'soon',tag:'قريباً',title:'لغز الأرقام',sub:'تلميح: حساب ومصحف'}
@@ -161,6 +172,7 @@ function today(){
     <p style="margin:14px 0 0;font-weight:700;font-size:19px">سؤال أخير: في أي سورة ورد هذا الوصف؟</p>
     <div class="q2" id="q2"></div>
     <p class="ayah" id="ayah">﴿مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ﴾<br><span style="color:var(--y);font-size:16px">[الأحزاب: ٤٠] — بطل! حللت اللغز كاملاً</span></p>
+    <div id="shareT" hidden>${shareBox('today')}</div>
   </div>`;
   drawCards();drawRoad();
   document.getElementById('undo').onclick=()=>{if(solved)return;placed.pop();clearMsg();drawCards();drawRoad()};
@@ -193,19 +205,119 @@ function showWin(){
   w.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
+const G=[["ي","م","ع","ي","س","ى"],["و","د","و","خ","ل","ص"],["س","ي","ا","س","ل","ا"],["ف","ا","ل","و","ى","ل"],["ي","و","ن","س","د","ح"],["ل","ه","ش","ع","ي","ب"]];
+const PL={"صالح":[[1,5],[2,5],[3,5],[4,5]],"يونس":[[4,0],[4,1],[4,2],[4,3]],"موسى":[[0,1],[1,2],[2,3],[3,4]],"عيسى":[[0,2],[0,3],[0,4],[0,5]],"يوسف":[[0,0],[1,0],[2,0],[3,0]],"داود":[[1,1],[2,2],[3,3],[4,4]],"شعيب":[[5,2],[5,3],[5,4],[5,5]]};
+const COL={'صالح':'#3A8C6E','يونس':'#EA5529','موسى':'#4A5AA8','عيسى':'#F08A6A','يوسف':'#66B598','داود':'#7E8AD0','شعيب':'#2E3A78'};
+const HINT=[['ابتلعه الحوت','يونس'],['كلّمه الله تكليماً','موسى'],['أُرسل إلى قوم ثمود','صالح'],['أُلقي في الجُبّ','يوسف'],['ألان الله له الحديد','داود'],['أُرسل إلى أهل مدين','شعيب'],['تكلّم في المهد','عيسى']];
+const KEY=cs=>cs.map(x=>x.join(',')).sort().join('|');
+let wsMode='sol',found=new Set(),sel=null,wsMsg=null;
 function anbiya(){
-  const G=[["ي","م","ع","ي","س","ى"],["و","د","و","خ","ل","ص"],["س","ي","ا","س","ل","ا"],["ف","ا","ل","و","ى","ل"],["ي","و","ن","س","د","ح"],["ل","ه","ش","ع","ي","ب"]];
-  const PL={"صالح":[[1,5],[2,5],[3,5],[4,5]],"يونس":[[4,0],[4,1],[4,2],[4,3]],"موسى":[[0,1],[1,2],[2,3],[3,4]],"عيسى":[[0,2],[0,3],[0,4],[0,5]],"يوسف":[[0,0],[1,0],[2,0],[3,0]],"داود":[[1,1],[2,2],[3,3],[4,4]],"شعيب":[[5,2],[5,3],[5,4],[5,5]]};
-  const COL={'صالح':'#3A8C6E','يونس':'#EA5529','موسى':'#4A5AA8','عيسى':'#F08A6A','يوسف':'#66B598','داود':'#7E8AD0','شعيب':'#2E3A78'};
-  const HINT=[['ابتلعه الحوت','يونس'],['كلّمه الله تكليماً','موسى'],['أُرسل إلى قوم ثمود','صالح'],['أُلقي في الجُبّ','يوسف'],['ألان الله له الحديد','داود'],['أُرسل إلى أهل مدين','شعيب'],['تكلّم في المهد','عيسى']];
-  const cell={};for(const w in PL)for(const [r,c] of PL[w])cell[r+','+c]=COL[w];
-  const grid=G.flatMap((row,r)=>row.map((ch,c)=>{const col=cell[r+','+c];return col?`<div style="background:${col}">${ch}</div>`:`<div class="free">${ch}</div>`})).join('');
-  panel.innerHTML=`<span class="done-stamp">تم ✓ — هذا هو الحل</span>
+  const seg=`<div class="seg"><button data-mode="sol" aria-pressed="${wsMode==='sol'}">عرض الحل</button><button data-mode="play" aria-pressed="${wsMode==='play'}">إعادة الحل</button></div>`;
+  if(wsMode==='sol'){
+    const cell={};for(const w in PL)for(const [r,c] of PL[w])cell[r+','+c]=COL[w];
+    const grid=G.flatMap((row,r)=>row.map((ch,c)=>{const col=cell[r+','+c];return col?`<div style="background:${col}">${ch}</div>`:`<div class="free">${ch}</div>`})).join('');
+    panel.innerHTML=`${seg}<span class="done-stamp">تم ✓ — هذا هو الحل</span>
+    <h2 class="ptitle">أسماء الأنبياء</h2>
+    <p class="lead">انتهى وقت هذا اللغز، وهذه إجابته: كل اسم بلون، والحروف الرمادية كانت أفخاخاً. تريد تجرّب بنفسك؟ اضغط «إعادة الحل».</p>
+    <div class="ws"><div class="grid6">${grid}</div>
+    <div class="hl">${HINT.map((h,i)=>`<p style="border-color:${COL[h[1]]}"><span>${AR(i+1)}. ${h[0]}</span><b>${h[1]}</b></p>`).join('')}</div></div>`;
+    return;
+  }
+  const cell={};for(const w of found)for(const [r,c] of PL[w])cell[r+','+c]=COL[w];
+  const grid=G.flatMap((row,r)=>row.map((ch,c)=>{const col=cell[r+','+c];const isSel=sel&&sel[0]===r&&sel[1]===c;
+    return `<button data-r="${r}" data-c="${c}" class="${isSel?'sel':''}" style="${col&&!isSel?`background:${col};color:#fff`:''}" aria-label="الحرف ${ch}">${ch}</button>`})).join('');
+  const done=found.size===7;
+  panel.innerHTML=`${seg}<span class="done-stamp" style="background:var(--y)">إعادة الحل — تدريب</span>
   <h2 class="ptitle">أسماء الأنبياء</h2>
-  <p class="lead">انتهى وقت هذا اللغز، وهذه إجابته: كل اسم بلون، والحروف الرمادية كانت أفخاخاً.</p>
+  <p class="lead">اعرف النبي من الوصف، ثم اضغط على <b>أول حرف</b> و<b>آخر حرف</b> من اسمه في اللوحة (أفقياً أو عمودياً أو قُطرياً). انتبه، فهناك أحرف فيها أفخاخ!</p>
   <div class="ws"><div class="grid6">${grid}</div>
-  <div class="hl">${HINT.map((h,i)=>`<p style="border-color:${COL[h[1]]}"><span>${AR(i+1)}. ${h[0]}</span><b>${h[1]}</b></p>`).join('')}</div></div>
-`;
+  <div class="hl">${HINT.map((h,i)=>`<p style="border-color:${found.has(h[1])?COL[h[1]]:'rgba(255,255,255,.25)'}"><span>${AR(i+1)}. ${h[0]}</span><b>${found.has(h[1])?h[1]:'؟'}</b></p>`).join('')}</div></div>
+  <p class="count">وجدت ${AR(found.size)} من ٧</p>
+  <div class="msg ${wsMsg?'show '+wsMsg[0]:''}" id="msg2">${wsMsg?wsMsg[1]:''}</div>
+  <div class="tools"><button class="btn" id="ws-reset">من جديد</button></div>
+  ${done?`<div class="win show"><p class="big" style="font-size:clamp(30px,7vw,46px)">ما شاء الله! وجدت الأنبياء السبعة</p><p style="margin:0">عليهم الصلاة والسلام</p>${shareBox('anbiya')}</div>`:''}`;
+}
+function tapCell(r,c){
+  wsMsg=null;
+  if(!sel){sel=[r,c];anbiya();return}
+  const [r1,c1]=sel;sel=null;
+  if(r1===r&&c1===c){anbiya();return}
+  const dr=Math.sign(r-r1),dc=Math.sign(c-c1),n=Math.max(Math.abs(r-r1),Math.abs(c-c1));
+  if(!(r1===r||c1===c||Math.abs(r-r1)===Math.abs(c-c1))){wsMsg=['warn','اختر أول حرف وآخر حرف على خط مستقيم.'];anbiya();return}
+  const cells=Array.from({length:n+1},(_,i)=>[r1+dr*i,c1+dc*i]);
+  const w=Object.keys(PL).find(k=>KEY(PL[k])===KEY(cells));
+  if(!w)wsMsg=['warn','هذه ليست من الأسماء المطلوبة… ربما فخ! حاول مرة ثانية.'];
+  else if(found.has(w))wsMsg=['hint','وجدت «'+w+'» من قبل.'];
+  else{found.add(w);wsMsg=['hint','أحسنت! وجدت نبي الله '+w+' عليه السلام.']}
+  anbiya();
+}
+
+/* ---------- share image ---------- */
+const CARDS={
+  today:{title:'رحلةٌ في السيرة',lines:['خاتم النبيين'],sub:'﴿وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ﴾ [الأحزاب: ٤٠]'},
+  anbiya:{title:'أسماء الأنبياء',lines:['يونس • موسى • صالح • يوسف','داود • شعيب • عيسى'],sub:'عليهم الصلاة والسلام'}
+};
+function shareBox(key){
+  return `<div class="sharebox" data-key="${key}">
+  <button class="btn main sh-open">شارك صورة إنجازك</button>
+  <div class="sh-form" hidden><p style="margin:0;font-weight:700">اكتب اسمك ليظهر على الصورة</p>
+  <input class="sh-name" maxlength="28" placeholder="اسمك هنا" autocomplete="off" aria-label="اسمك">
+  <div class="tools"><button class="btn main sh-make">جهّز صورتي</button></div></div>
+  <div class="sh-out" hidden><img class="sh-img" alt="صورة إنجازك">
+  <div class="tools"><button class="btn main sh-save">حفظ الصورة</button><button class="btn sh-share" hidden>مشاركة</button></div>
+  <p class="sh-note">احفظ الصورة وأرسلها لنا على التلغرام. إذا ما اشتغل زر الحفظ، اضغط مطوّلاً على الصورة واختر «حفظ».</p></div></div>`;
+}
+function fit(ctx,t,max,size,weight,fam){let s=size;do{ctx.font=`${weight} ${s}px ${fam}`;s-=2}while(ctx.measureText(t).width>max&&s>20);return s}
+function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function sparkle(ctx,x,y,s,col){ctx.save();ctx.translate(x,y);ctx.scale(s/100,s/100);ctx.beginPath();ctx.moveTo(50,0);ctx.bezierCurveTo(53,40,60,47,100,50);ctx.bezierCurveTo(60,53,53,60,50,100);ctx.bezierCurveTo(47,60,40,53,0,50);ctx.bezierCurveTo(40,47,47,40,50,0);ctx.fillStyle=col;ctx.fill();ctx.restore()}
+async function makeCard(key,name){
+  const P='"IBM Plex Sans Arabic", sans-serif',B='"Baloo Bhaijaan 2", "IBM Plex Sans Arabic", sans-serif';
+  try{await Promise.all([document.fonts.load('800 72px "Baloo Bhaijaan 2"'),document.fonts.load('700 46px "IBM Plex Sans Arabic"'),document.fonts.load('500 30px "IBM Plex Sans Arabic"')])}catch(e){}
+  const d=CARDS[key],W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');ctx.direction='rtl';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#4A5AA8';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,207,99,.08)';ctx.lineWidth=70;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-60,300);ctx.bezierCurveTo(260,220,420,420,760,360);ctx.bezierCurveTo(1000,318,1080,520,1160,600);ctx.stroke();
+  ctx.strokeStyle='rgba(102,181,152,.12)';ctx.lineWidth=60;ctx.beginPath();ctx.moveTo(-80,1180);ctx.bezierCurveTo(240,1060,560,1260,820,1140);ctx.bezierCurveTo(980,1066,1080,1120,1160,1080);ctx.stroke();
+  [[80,80,40,'#FFCF63'],[960,120,26,'#fff'],[60,560,22,'#fff'],[1000,700,30,'#FFCF63'],[90,1000,24,'#FFCF63'],[990,1020,18,'#fff']].forEach(a=>sparkle(ctx,...a));
+  ctx.fillStyle='#FFCF63';ctx.font=`800 70px ${B}`;ctx.fillText('لـغـــز الـــرّواد',W/2,150);
+  ctx.fillStyle='#66B598';rrect(ctx,W/2-160,196,320,66,33);ctx.fill();
+  ctx.fillStyle='#1F2A66';ctx.font=`700 34px ${P}`;ctx.fillText('تمّ الحل ✓',W/2,241);
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font=`500 36px ${P}`;ctx.fillText('البطل',W/2,345);
+  ctx.fillStyle='#FFCF63';fit(ctx,name,920,104,700,P);ctx.fillText(name,W/2,450);
+  ctx.fillStyle='#fff';const t='حلّ لغز «'+d.title+'» بنجاح!';fit(ctx,t,920,46,700,P);ctx.fillText(t,W/2,535);
+  ctx.fillStyle='#EA5529';rrect(ctx,90,610,900,330,40);ctx.fill();
+  ctx.fillStyle='#fff';rrect(ctx,90,596,900,330,40);ctx.fill();
+  ctx.fillStyle='#EA5529';ctx.font=`700 32px ${P}`;ctx.fillText('الحل الصحيح',W/2,660);
+  ctx.fillStyle='#4A5AA8';
+  if(d.lines.length===1){fit(ctx,d.lines[0],820,96,700,P);ctx.fillText(d.lines[0],W/2,790)}
+  else{d.lines.forEach((l,i)=>{fit(ctx,l,820,54,700,P);ctx.fillText(l,W/2,745+i*72)})}
+  ctx.fillStyle='#1F2A66';fit(ctx,d.sub,820,32,500,P);ctx.fillText(d.sub,W/2,885);
+  let hij='',gre='';const now=new Date();
+  try{hij=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(now)}catch(e){}
+  try{gre=new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(now)+'م'}catch(e){}
+  ctx.fillStyle='#fff';ctx.font=`600 32px ${P}`;if(hij)ctx.fillText(hij,W/2,1015);
+  ctx.fillStyle='rgba(255,255,255,.75)';ctx.font=`500 28px ${P}`;if(gre)ctx.fillText(gre,W/2,1060);
+  const lg=document.querySelector('header img');
+  if(lg&&lg.naturalWidth){const lw=190,lh=lw*lg.naturalHeight/lg.naturalWidth;ctx.drawImage(lg,W/2-lw/2,H-lh-50,lw,lh)}
+  return cv;
+}
+async function shareFlow(btn){
+  const box=btn.closest('.sharebox');if(!box)return;
+  if(btn.classList.contains('sh-open')){btn.hidden=true;box.querySelector('.sh-form').hidden=false;box.querySelector('.sh-name').focus();return}
+  if(btn.classList.contains('sh-make')){
+    const inp=box.querySelector('.sh-name');const name=inp.value.trim();
+    if(!name){inp.placeholder='اكتب اسمك أولاً';inp.focus();return}
+    btn.disabled=true;btn.textContent='جاري التجهيز…';
+    const cv=await makeCard(box.dataset.key,name);
+    const img=box.querySelector('.sh-img');img.src=cv.toDataURL('image/png');
+    box._name=name;box._blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    box.querySelector('.sh-out').hidden=false;btn.disabled=false;btn.textContent='جهّز من جديد';
+    try{const f=new File([box._blob],'ruwwad.png',{type:'image/png'});box.querySelector('.sh-share').hidden=!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){}
+    img.scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(btn.classList.contains('sh-save')&&box._blob){
+    const url=URL.createObjectURL(box._blob);const a=document.createElement('a');a.href=url;a.download='الرواد-'+box._name+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);return}
+  if(btn.classList.contains('sh-share')&&box._blob){
+    try{const f=new File([box._blob],'ruwwad.png',{type:'image/png'});await navigator.share({files:[f],text:'حللتُ لغز الرواد!'})}catch(e){}}
 }
 
 function soon(p){
@@ -224,12 +336,17 @@ function show(id){
 pick.addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)show(b.dataset.id)});
 panel.addEventListener('click',e=>{
   const ev=e.target.closest('.ev');
-  if(ev&&!solved&&placed.length<11){placed.push(+ev.dataset.k);clearMsg();drawCards();drawRoad();return}
+  if(ev&&!ev.closest('.sharebox')&&!solved&&placed.length<11){placed.push(+ev.dataset.k);clearMsg();drawCards();drawRoad();return}
   const bd=e.target.closest('.bead button');
   if(bd&&!solved){const i=+bd.dataset.i;if(placed[i]!==undefined){placed.splice(i,1);clearMsg();drawCards();drawRoad()}return}
+  const sb=e.target.closest('.sharebox button');if(sb){shareFlow(sb);return}
+  const sg=e.target.closest('.seg button');if(sg){wsMode=sg.dataset.mode;sel=null;wsMsg=null;anbiya();return}
+  const gc=e.target.closest('.grid6 button');if(gc){tapCell(+gc.dataset.r,+gc.dataset.c);return}
+  if(e.target.closest('#ws-reset')){found=new Set();sel=null;wsMsg=null;anbiya();return}
   const o=e.target.closest('.opt');
-  if(o){const right=o.dataset.o==='الأحزاب';o.classList.add(right?'ok':'bad');if(right){document.querySelectorAll('.opt').forEach(x=>x.disabled=true);document.getElementById('ayah').classList.add('show')}}
+  if(o){const right=o.dataset.o==='الأحزاب';o.classList.add(right?'ok':'bad');if(right){document.querySelectorAll('.opt').forEach(x=>x.disabled=true);document.getElementById('ayah').classList.add('show');document.getElementById('shareT').hidden=false}}
 });
+panel.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('sh-name')){const b=e.target.closest('.sharebox').querySelector('.sh-make');if(b)shareFlow(b)}});
 window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
 show(location.hash.slice(1)||'today');
 }
