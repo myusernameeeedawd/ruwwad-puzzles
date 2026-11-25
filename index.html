@@ -210,7 +210,7 @@ const PL={"صالح":[[1,5],[2,5],[3,5],[4,5]],"يونس":[[4,0],[4,1],[4,2],[4,
 const COL={'صالح':'#3A8C6E','يونس':'#EA5529','موسى':'#4A5AA8','عيسى':'#F08A6A','يوسف':'#66B598','داود':'#7E8AD0','شعيب':'#2E3A78'};
 const HINT=[['ابتلعه الحوت','يونس'],['كلّمه الله تكليماً','موسى'],['أُرسل إلى قوم ثمود','صالح'],['أُلقي في الجُبّ','يوسف'],['ألان الله له الحديد','داود'],['أُرسل إلى أهل مدين','شعيب'],['تكلّم في المهد','عيسى']];
 const KEY=cs=>cs.map(x=>x.join(',')).sort().join('|');
-let wsMode='sol',found=new Set(),sel=null,wsMsg=null;
+let wsMode='sol',found=new Set(),path=[],wsMsg=null;
 function anbiya(){
   const seg=`<div class="seg"><button data-mode="sol" aria-pressed="${wsMode==='sol'}">عرض الحل</button><button data-mode="play" aria-pressed="${wsMode==='play'}">إعادة الحل</button></div>`;
   if(wsMode==='sol'){
@@ -224,31 +224,37 @@ function anbiya(){
     return;
   }
   const cell={};for(const w of found)for(const [r,c] of PL[w])cell[r+','+c]=COL[w];
-  const grid=G.flatMap((row,r)=>row.map((ch,c)=>{const col=cell[r+','+c];const isSel=sel&&sel[0]===r&&sel[1]===c;
+  const grid=G.flatMap((row,r)=>row.map((ch,c)=>{const col=cell[r+','+c];const isSel=path.some(p=>p[0]===r&&p[1]===c);
     return `<button data-r="${r}" data-c="${c}" class="${isSel?'sel':''}" style="${col&&!isSel?`background:${col};color:#fff`:''}" aria-label="الحرف ${ch}">${ch}</button>`})).join('');
   const done=found.size===7;
   panel.innerHTML=`${seg}<span class="done-stamp" style="background:var(--y)">إعادة الحل — تدريب</span>
   <h2 class="ptitle">أسماء الأنبياء</h2>
-  <p class="lead">اعرف النبي من الوصف، ثم اضغط على <b>أول حرف</b> و<b>آخر حرف</b> من اسمه في اللوحة (أفقياً أو عمودياً أو قُطرياً). انتبه، فهناك أحرف فيها أفخاخ!</p>
+  <p class="lead">اعرف النبي من الوصف، ثم اضغط على حروف اسمه <b>حرفاً حرفاً بالترتيب</b> في اللوحة (أفقياً أو عمودياً أو قُطرياً). للتراجع اضغط على آخر حرف اخترته. انتبه، فهناك أحرف فيها أفخاخ!</p>
   <div class="ws"><div class="grid6">${grid}</div>
   <div class="hl">${HINT.map((h,i)=>`<p style="border-color:${found.has(h[1])?COL[h[1]]:'rgba(255,255,255,.25)'}"><span>${AR(i+1)}. ${h[0]}</span><b>${found.has(h[1])?h[1]:'؟'}</b></p>`).join('')}</div></div>
   <p class="count">وجدت ${AR(found.size)} من ٧</p>
   <div class="msg ${wsMsg?'show '+wsMsg[0]:''}" id="msg2">${wsMsg?wsMsg[1]:''}</div>
-  <div class="tools"><button class="btn" id="ws-reset">من جديد</button></div>
+  <div class="tools"><button class="btn" id="ws-clear">مسح التحديد</button><button class="btn" id="ws-reset">من جديد</button></div>
   ${done?`<div class="win show"><p class="big" style="font-size:clamp(30px,7vw,46px)">ما شاء الله! وجدت الأنبياء السبعة</p><p style="margin:0">عليهم الصلاة والسلام</p>${shareBox('anbiya')}</div>`:''}`;
 }
 function tapCell(r,c){
   wsMsg=null;
-  if(!sel){sel=[r,c];anbiya();return}
-  const [r1,c1]=sel;sel=null;
-  if(r1===r&&c1===c){anbiya();return}
-  const dr=Math.sign(r-r1),dc=Math.sign(c-c1),n=Math.max(Math.abs(r-r1),Math.abs(c-c1));
-  if(!(r1===r||c1===c||Math.abs(r-r1)===Math.abs(c-c1))){wsMsg=['warn','اختر أول حرف وآخر حرف على خط مستقيم.'];anbiya();return}
-  const cells=Array.from({length:n+1},(_,i)=>[r1+dr*i,c1+dc*i]);
-  const w=Object.keys(PL).find(k=>KEY(PL[k])===KEY(cells));
-  if(!w)wsMsg=['warn','هذه ليست من الأسماء المطلوبة… ربما فخ! حاول مرة ثانية.'];
-  else if(found.has(w))wsMsg=['hint','وجدت «'+w+'» من قبل.'];
-  else{found.add(w);wsMsg=['hint','أحسنت! وجدت نبي الله '+w+' عليه السلام.']}
+  const last=path[path.length-1];
+  if(last&&last[0]===r&&last[1]===c){path.pop();anbiya();return}
+  if(path.some(p=>p[0]===r&&p[1]===c)){path=[[r,c]];anbiya();return}
+  if(last){
+    const dr=r-last[0],dc=c-last[1];
+    const adj=Math.abs(dr)<=1&&Math.abs(dc)<=1;
+    let straight=true;
+    if(path.length>=2){const pr=last[0]-path[path.length-2][0],pc=last[1]-path[path.length-2][1];straight=(dr===pr&&dc===pc)}
+    if(!adj||!straight){path=[[r,c]];wsMsg=['hint','بدأت من حرف جديد. الحروف لازم تكون متجاورة وعلى خط مستقيم.'];anbiya();return}
+  }
+  path.push([r,c]);
+  const ps=path.map(p=>p.join(',')).join('|');
+  const w=Object.keys(PL).find(k=>PL[k].map(p=>p.join(',')).join('|')===ps);
+  if(w){path=[];if(found.has(w))wsMsg=['hint','وجدت «'+w+'» من قبل.'];else{found.add(w);wsMsg=['hint','أحسنت! وجدت نبي الله '+w+' عليه السلام.']}}
+  else if(path.length>=4&&!Object.values(PL).some(cs=>cs.length>path.length&&cs.slice(0,path.length).map(p=>p.join(',')).join('|')===ps)){
+    wsMsg=['warn','«'+path.map(p=>G[p[0]][p[1]]).join('')+'» ليس من الأسماء المطلوبة… ربما فخ! حاول مرة ثانية.'];path=[]}
   anbiya();
 }
 
@@ -351,9 +357,10 @@ panel.addEventListener('click',e=>{
   const bd=e.target.closest('.bead button');
   if(bd&&!solved){const i=+bd.dataset.i;if(placed[i]!==undefined){placed.splice(i,1);clearMsg();drawCards();drawRoad()}return}
   const sb=e.target.closest('.sharebox button');if(sb){shareFlow(sb);return}
-  const sg=e.target.closest('.seg button');if(sg){wsMode=sg.dataset.mode;sel=null;wsMsg=null;anbiya();return}
+  const sg=e.target.closest('.seg button');if(sg){wsMode=sg.dataset.mode;path=[];wsMsg=null;anbiya();return}
   const gc=e.target.closest('.grid6 button');if(gc){tapCell(+gc.dataset.r,+gc.dataset.c);return}
-  if(e.target.closest('#ws-reset')){found=new Set();sel=null;wsMsg=null;anbiya();return}
+  if(e.target.closest('#ws-reset')){found=new Set();path=[];wsMsg=null;anbiya();return}
+  if(e.target.closest('#ws-clear')){path=[];wsMsg=null;anbiya();return}
   const o=e.target.closest('.opt');
   if(o){const right=o.dataset.o==='الأحزاب';o.classList.add(right?'ok':'bad');if(right){document.querySelectorAll('.opt').forEach(x=>x.disabled=true);document.getElementById('ayah').classList.add('show');document.getElementById('shareT').hidden=false}}
 });
